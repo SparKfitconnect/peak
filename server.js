@@ -7,7 +7,7 @@ const fs      = require('fs');
 const path    = require('path');
 
 const DATA = path.join(__dirname, 'data.json');
-const PORT  = process.env.PORT || 3000;
+const PORT  = parseInt(process.env.PORT) || 3000;
 
 const app    = express();
 const server = http.createServer(app);
