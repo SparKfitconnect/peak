@@ -44,4 +44,4 @@ wss.on('connection', ws => {
 
 app.use(express.static(__dirname));
 
-server.listen(PORT, () => console.log(`Peak running on :${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`Peak running on :${PORT}`));
