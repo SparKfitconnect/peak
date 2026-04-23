@@ -1,0 +1,10 @@
+{
+  "postStartCommand": "cd /workspaces/peak && node server.js &",
+  "portsAttributes": {
+    "3000": {
+      "visibility": "public",
+      "label": "Peak App"
+    }
+  },
+  "forwardPorts": [3000]
+}
