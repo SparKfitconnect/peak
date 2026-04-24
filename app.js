@@ -1131,6 +1131,39 @@ app.addEventListener('click', e => {
   }
 });
 
+// ── Nav icon background removal ───────────────────────────────────────────────
+// Draws the image into a canvas then zeroes out dark neutral (charcoal) pixels,
+// leaving only the coloured icon pixels visible — no circular bg, no container.
+
+function processNavIcon(canvasId, imgSrc) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    try {
+      const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d  = id.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i+1], b = d[i+2];
+        const lum = r * 0.299 + g * 0.587 + b * 0.114;
+        const sat = Math.max(r, g, b) - Math.min(r, g, b);
+        if (lum < 60 && sat < 35) {
+          d[i+3] = 0;                                    // pure background → fully transparent
+        } else if (lum < 85 && sat < 30) {
+          d[i+3] = Math.round(((lum - 60) / 25) * 255); // soft edge fade
+        }
+      }
+      ctx.putImageData(id, 0, 0);
+    } catch(e) {}
+  };
+  img.src = imgSrc;
+}
+
+processNavIcon('icon-dashboard', '/assets/dashboard.png');
+processNavIcon('icon-sales',     '/assets/sales.png');
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 connectWS();
