@@ -112,12 +112,22 @@
       background: #060d1a; margin: 0 auto; flex-shrink: 0;
       transition: box-shadow .2s; opacity: 0.72;
     }
+    .nav-icon-wrap.light {
+      background: transparent;
+    }
+    .nav-icon-wrap.light img {
+      mix-blend-mode: multiply;
+    }
     .nav-btn img {
       width: 34px; height: 34px; display: block; object-fit: cover;
     }
     .nav-btn.active .nav-icon-wrap {
       box-shadow: 0 0 0 2px #1e6fff, 0 0 10px rgba(30,111,255,0.5);
       opacity: 1;
+    }
+    .nav-btn.active .nav-icon-wrap.light {
+      box-shadow: none;
+      filter: drop-shadow(0 0 6px rgba(30,111,255,0.6));
     }
     .nav-btn.active .nav-label { color: #1e6fff; font-weight: 700; }
 
@@ -429,7 +439,7 @@
       <span class="nav-label">Dashboard</span>
     </button>
     <button class="nav-btn" id="nav-jobs">
-      <div class="nav-icon-wrap"><img src="/assets/briefcase.png" style="object-position:30% center;"></div>
+      <div class="nav-icon-wrap light"><img src="/assets/briefcase.png" style="object-position:center center;"></div>
       <span class="nav-label">Jobs</span>
     </button>
     <button class="nav-fab" id="nav-add">
