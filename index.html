@@ -107,19 +107,14 @@
     .nav-btn:active { opacity: .5; }
     .nav-icon { font-size: 22px; line-height: 1; filter: grayscale(1) opacity(.4); transition: filter .15s; }
     .nav-label { font-size: 10px; font-weight: 500; color: var(--g400); letter-spacing: .1px; }
-    .nav-icon-canvas {
-      width: 28px; height: 28px; display: block; margin: 0 auto;
-      opacity: 0.7; transition: opacity .2s, filter .2s;
+    .nav-icon-canvas, .nav-icon-img {
+      width: 26px; height: 26px; display: block; margin: 0 auto;
+      opacity: 0.72; transition: opacity .2s, filter .2s; flex-shrink: 0;
     }
-    .nav-btn img.icon-light {
-      width: 28px; height: 28px; display: block; object-fit: contain;
-      margin: 0 auto; opacity: 0.7; mix-blend-mode: multiply;
-      transition: opacity .2s, filter .2s;
-    }
+    .nav-icon-img { object-fit: contain; mix-blend-mode: multiply; }
     .nav-btn.active .nav-icon-canvas,
-    .nav-btn.active img.icon-light {
+    .nav-btn.active .nav-icon-img {
       opacity: 1;
-      filter: drop-shadow(0 0 4px rgba(30,111,255,0.5));
     }
     .nav-btn.active .nav-label { color: #1e6fff; font-weight: 700; }
 
@@ -431,7 +426,7 @@
       <span class="nav-label">Dashboard</span>
     </button>
     <button class="nav-btn" id="nav-jobs">
-      <img src="/assets/briefcase.png" class="icon-light">
+      <img src="/assets/briefcase.png" class="nav-icon-img">
       <span class="nav-label">Jobs</span>
     </button>
     <button class="nav-fab" id="nav-add">
@@ -441,7 +436,7 @@
       <span class="nav-fab-label">Add</span>
     </button>
     <button class="nav-btn" id="nav-calendar">
-      <img src="/assets/calendar_no_clock.png" class="icon-light">
+      <img src="/assets/calendar_no_clock.png" class="nav-icon-img">
       <span class="nav-label">Calendar</span>
     </button>
     <button class="nav-btn" id="nav-sales">
