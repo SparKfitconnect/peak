@@ -107,27 +107,26 @@
     .nav-btn:active { opacity: .5; }
     .nav-icon { font-size: 22px; line-height: 1; filter: grayscale(1) opacity(.4); transition: filter .15s; }
     .nav-label { font-size: 10px; font-weight: 500; color: var(--g400); letter-spacing: .1px; }
-    .nav-icon-wrap {
-      width: 28px; height: 28px; border-radius: 50%; overflow: hidden;
-      background: #060d1a; margin: 0 auto; flex-shrink: 0;
-      transition: box-shadow .2s; opacity: 0.75;
+    .nav-btn img {
+      width: 26px; height: 26px; display: block; object-fit: contain;
+      margin: 0 auto; flex-shrink: 0;
+      transition: opacity .2s, filter .2s;
+      opacity: 0.65;
     }
-    .nav-icon-wrap.light {
-      background: transparent;
+    .nav-btn img.icon-dark {
+      filter: url(#icon-bg-remove);
     }
-    .nav-icon-wrap.light img {
+    .nav-btn img.icon-light {
       mix-blend-mode: multiply;
     }
-    .nav-btn img {
-      width: 28px; height: 28px; display: block; object-fit: cover;
-    }
-    .nav-btn.active .nav-icon-wrap {
-      box-shadow: 0 0 0 2px #1e6fff, 0 0 8px rgba(30,111,255,0.5);
+    .nav-btn.active img {
       opacity: 1;
     }
-    .nav-btn.active .nav-icon-wrap.light {
-      box-shadow: none;
-      filter: drop-shadow(0 0 5px rgba(30,111,255,0.6));
+    .nav-btn.active img.icon-dark {
+      filter: url(#icon-bg-remove) drop-shadow(0 0 4px rgba(30,111,255,0.55));
+    }
+    .nav-btn.active img.icon-light {
+      filter: drop-shadow(0 0 4px rgba(30,111,255,0.55));
     }
     .nav-btn.active .nav-label { color: #1e6fff; font-weight: 700; }
 
@@ -418,6 +417,15 @@
 </head>
 <body>
 
+  <svg width="0" height="0" style="position:absolute;pointer-events:none;">
+    <defs>
+      <filter id="icon-bg-remove">
+        <!-- Alpha = -2R -2G +5B -0.5 : gray/charcoal → transparent, blue icons → opaque -->
+        <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -2 -2 5 0 -0.5"/>
+      </filter>
+    </defs>
+  </svg>
+
   <!-- Header -->
   <header class="header">
     <div class="logo" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);">
@@ -435,11 +443,11 @@
   <!-- Bottom Nav -->
   <nav class="nav">
     <button class="nav-btn active" id="nav-dashboard">
-      <div class="nav-icon-wrap"><img src="/assets/dashboard.png" style="object-position:center center;"></div>
+      <img src="/assets/dashboard.png" class="icon-dark">
       <span class="nav-label">Dashboard</span>
     </button>
     <button class="nav-btn" id="nav-jobs">
-      <div class="nav-icon-wrap"><img src="/assets/job.png" style="object-position:center center;"></div>
+      <img src="/assets/job.png" class="icon-dark">
       <span class="nav-label">Jobs</span>
     </button>
     <button class="nav-fab" id="nav-add">
@@ -449,11 +457,11 @@
       <span class="nav-fab-label">Add</span>
     </button>
     <button class="nav-btn" id="nav-calendar">
-      <div class="nav-icon-wrap light"><img src="/assets/calendar_no_clock.png" style="object-position:center center;"></div>
+      <img src="/assets/calendar_no_clock.png" class="icon-light">
       <span class="nav-label">Calendar</span>
     </button>
     <button class="nav-btn" id="nav-sales">
-      <div class="nav-icon-wrap"><img src="/assets/sales.png" style="object-position:center center;"></div>
+      <img src="/assets/sales.png" class="icon-dark">
       <span class="nav-label">Sales</span>
     </button>
   </nav>
