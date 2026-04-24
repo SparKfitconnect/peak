@@ -145,6 +145,7 @@ let calMonthOffset = 0;
 let selectedCalDay = localDate();
 let activeCharts   = [];
 let dashMonthIdx   = 0;
+let tickerMode     = 'month';
 
 // ── App shell ─────────────────────────────────────────────────────────────────
 
@@ -184,24 +185,50 @@ function showDashboard() {
   const wS = localDate(wStart), wE = localDate(wEnd);
   const mS = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
 
-  const isPaid   = j => j.status === 'paid';
-  const sum      = arr => arr.reduce((s,j) => s+(j.price||0), 0);
-  const inRange  = (j,a,b) => j.date >= a && j.date <= b;
+  const isPaid  = j => j.status === 'paid';
+  const sum     = arr => arr.reduce((s,j) => s+(j.price||0), 0);
+  const inRange = (j,a,b) => j.date >= a && j.date <= b;
 
   const monthJobs    = jobs.filter(j => j.date >= mS);
   const monthTotal   = sum(monthJobs);
   const monthPaid    = sum(monthJobs.filter(isPaid));
   const monthPending = monthTotal - monthPaid;
-  const weekRev      = sum(jobs.filter(j => isPaid(j) && inRange(j, wS, wE)));
-  const weekSch      = sum(jobs.filter(j => !isPaid(j) && inRange(j, wS, wE)));
+  const weekTotal    = sum(jobs.filter(j => inRange(j, wS, wE)));
+  const weekPaid     = sum(jobs.filter(j => isPaid(j) && inRange(j, wS, wE)));
+  const allPaid      = sum(jobs.filter(isPaid));
   const todayJobs    = jobs.filter(j => j.date === today).sort((a,b) => (a.time||'').localeCompare(b.time||''));
   const todayTotal   = sum(todayJobs);
   const todayPaid    = sum(todayJobs.filter(isPaid));
   const nSched       = jobs.filter(j => j.status === 'scheduled').length;
   const nComp        = jobs.filter(j => j.status === 'completed').length;
-  const pipelineVal  = sum(jobs.filter(j => j.status === 'scheduled' || j.status === 'completed'));
+
+  // Ticker
+  const tickerOpts = {
+    month: { lbl: 'Month Revenue',  val: monthTotal, sub: `${fmt$(monthPaid)} paid · ${fmt$(monthPending)} pending` },
+    week:  { lbl: 'Week Revenue',   val: weekTotal,  sub: `${fmt$(weekPaid)} paid this week` },
+    all:   { lbl: 'All Revenue',    val: allPaid,    sub: 'total collected all time' },
+  };
+  const tk = tickerOpts[tickerMode];
+
+  // Goal
+  const GOAL        = 60000;
+  const goalPct     = Math.min(100, Math.round(allPaid / GOAL * 100));
+  const goalLeft    = Math.max(0, GOAL - allPaid);
 
   render(`
+    <div class="ticker" id="dash-ticker">
+      <button class="ticker-btn" id="ticker-toggle">
+        <span class="ticker-lbl">${tk.lbl}</span>
+        <span class="ticker-amt">${fmt$(tk.val)}</span>
+        <span class="ticker-chev">▾</span>
+      </button>
+      <div class="ticker-menu" id="ticker-menu" style="display:none;">
+        <button class="ticker-opt${tickerMode==='month'?' active':''}" data-tmode="month">Month Revenue</button>
+        <button class="ticker-opt${tickerMode==='week'?' active':''}" data-tmode="week">Week Revenue</button>
+        <button class="ticker-opt${tickerMode==='all'?' active':''}" data-tmode="all">All Revenue</button>
+      </div>
+    </div>
+
     <div class="hero" style="background:linear-gradient(135deg,#1a1a2e 0%,#0055cc 100%);">
       <div class="hero-lbl">Month Total</div>
       <div class="hero-val">${fmt$(monthTotal)}</div>
@@ -242,9 +269,58 @@ function showDashboard() {
       </div>
       <div class="chart-wrap-lg"><canvas id="dash-chart"></canvas></div>
     </div>
+
+    <div class="sec-hd" style="margin-top:4px;">
+      <span class="sec-title">Revenue Goal</span>
+    </div>
+    <div class="card" style="padding-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:2px;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--g500);margin-bottom:4px;">$60,000 Target</div>
+          <div style="font-size:26px;font-weight:900;letter-spacing:-.8px;">${fmt$(allPaid)}</div>
+        </div>
+        <div style="text-align:right;padding-bottom:2px;">
+          <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:${goalPct>=100?'#00c853':'#0066cc'};">${goalPct}%</div>
+        </div>
+      </div>
+      <div class="goal-bar-track">
+        <div class="goal-bar-fill" style="width:${goalPct}%;"></div>
+      </div>
+      <div style="font-size:12px;color:var(--g400);margin-top:4px;">
+        ${goalPct >= 100
+          ? '🎉 Goal reached! Amazing work.'
+          : `${fmt$(goalLeft)} to go`}
+      </div>
+    </div>
   `);
 
   bindSwipe();
+
+  // Ticker dropdown
+  const tickerToggle = document.getElementById('ticker-toggle');
+  const tickerMenu   = document.getElementById('ticker-menu');
+  const dashTicker   = document.getElementById('dash-ticker');
+  if (tickerToggle) {
+    tickerToggle.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = tickerMenu.style.display !== 'none';
+      tickerMenu.style.display = open ? 'none' : 'block';
+      dashTicker.classList.toggle('open', !open);
+      if (!open) {
+        setTimeout(() => document.addEventListener('click', () => {
+          tickerMenu.style.display = 'none';
+          dashTicker.classList.remove('open');
+        }, { once: true }), 0);
+      }
+    });
+  }
+  document.querySelectorAll('[data-tmode]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      tickerMode = btn.dataset.tmode;
+      showDashboard();
+    });
+  });
 
   const monthMap  = [{lbl:'May',m:4},{lbl:'June',m:5},{lbl:'July',m:6},{lbl:'August',m:7}];
   const selMonth  = monthMap[dashMonthIdx] || monthMap[0];
