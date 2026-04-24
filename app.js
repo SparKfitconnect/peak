@@ -2,9 +2,11 @@
 
 // ── Realtime sync ─────────────────────────────────────────────────────────────
 
-let jobs   = [];
-let _ws    = null;
-let _wsOk  = false;
+let jobs              = [];
+let _ws               = null;
+let _wsOk             = false;
+let _pendingChanges   = false;   // true when a save happened while WS was down
+let _reconnectDelay   = 1000;    // starts at 1s, doubles on each failure, caps at 30s
 
 function load() { return jobs; }
 
@@ -12,6 +14,10 @@ function save(updated) {
   jobs = updated;
   if (_ws && _ws.readyState === WebSocket.OPEN) {
     _ws.send(JSON.stringify({ type: 'set', payload: jobs }));
+    _pendingChanges = false;
+  } else {
+    // WS is down — hold the change in memory and push it the moment we reconnect
+    _pendingChanges = true;
   }
 }
 
@@ -24,12 +30,24 @@ function connectWS() {
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   _ws = new WebSocket(`${proto}//${location.host}`);
 
-  _ws.onopen = () => setDot('#34c759');
+  _ws.onopen = () => {
+    setDot('#34c759');
+    _reconnectDelay = 1000; // reset backoff on clean connect
+  };
 
   _ws.onmessage = ({ data }) => {
-    const msg = JSON.parse(data);
-    if (msg.type === 'sync') {
-      jobs = msg.jobs;
+    try {
+      const msg = JSON.parse(data);
+      if (msg.type !== 'sync') return;
+
+      if (_pendingChanges) {
+        // We made changes while offline — push ours, don't overwrite with server state
+        _pendingChanges = false;
+        _ws.send(JSON.stringify({ type: 'set', payload: jobs }));
+      } else {
+        jobs = msg.jobs;
+      }
+
       const sheetOpen = document.getElementById('sheet-overlay')?.classList.contains('open');
       if (!_wsOk) {
         _wsOk = true;
@@ -37,10 +55,16 @@ function connectWS() {
       } else if (!sheetOpen) {
         paint();
       }
-    }
+    } catch {}
   };
 
-  _ws.onclose = () => { _wsOk = false; setDot('#ff3b30'); setTimeout(connectWS, 2000); };
+  _ws.onclose = () => {
+    _wsOk = false;
+    setDot('#ff3b30');
+    setTimeout(connectWS, _reconnectDelay);
+    _reconnectDelay = Math.min(_reconnectDelay * 2, 30_000); // exponential backoff, max 30s
+  };
+
   _ws.onerror = () => setDot('#ff9500');
 }
 
