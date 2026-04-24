@@ -1237,8 +1237,7 @@ function processNavIcon(canvasId, imgSrc) {
   img.src = imgSrc;
 }
 
-processNavIcon('icon-dashboard', '/assets/dashboard.png');
-processNavIcon('icon-sales',     '/assets/sales.png');
+processNavIcon('icon-sales', '/assets/sales.png');
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 

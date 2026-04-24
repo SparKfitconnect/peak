@@ -109,15 +109,15 @@
     .nav-btn:active { opacity: .5; }
     .nav-icon { font-size: 22px; line-height: 1; filter: grayscale(1) opacity(.4); transition: filter .15s; }
     .nav-label { font-size: 10px; font-weight: 500; color: var(--g400); letter-spacing: .1px; }
-    .nav-icon-canvas, .nav-icon-img {
+    .nav-icon-canvas, .nav-icon-img, .nav-icon-clip {
       width: 26px; height: 26px; display: block; margin: 0 auto;
-      opacity: 0.72; transition: opacity .2s, filter .2s; flex-shrink: 0;
+      opacity: 0.72; transition: opacity .2s; flex-shrink: 0;
     }
-    .nav-icon-img { object-fit: contain; mix-blend-mode: multiply; }
+    .nav-icon-img   { object-fit: contain; mix-blend-mode: multiply; }
+    .nav-icon-clip  { object-fit: cover; clip-path: circle(47%); }
     .nav-btn.active .nav-icon-canvas,
-    .nav-btn.active .nav-icon-img {
-      opacity: 1;
-    }
+    .nav-btn.active .nav-icon-img,
+    .nav-btn.active .nav-icon-clip { opacity: 1; }
     .nav-btn.active .nav-label { color: #1e6fff; font-weight: 700; }
 
     /* FAB */
@@ -459,7 +459,7 @@
   <!-- Bottom Nav -->
   <nav class="nav">
     <button class="nav-btn active" id="nav-dashboard">
-      <canvas id="icon-dashboard" class="nav-icon-canvas" width="80" height="80"></canvas>
+      <img src="/assets/dashboard.png" class="nav-icon-clip">
       <span class="nav-label">Dashboard</span>
     </button>
     <button class="nav-btn" id="nav-jobs">
