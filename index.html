@@ -108,17 +108,18 @@
     .nav-icon { font-size: 22px; line-height: 1; filter: grayscale(1) opacity(.4); transition: filter .15s; }
     .nav-label { font-size: 10px; font-weight: 500; color: var(--g400); letter-spacing: .1px; }
     .nav-icon-wrap {
-      width: 34px; height: 34px; border-radius: 10px; overflow: hidden;
-      background: #000; display: flex; align-items: center; justify-content: center;
-      margin: 0 auto; transition: box-shadow .2s;
+      width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+      background: #060d1a; margin: 0 auto; flex-shrink: 0;
+      transition: box-shadow .2s; opacity: 0.72;
     }
     .nav-btn img {
-      width: 34px; height: 34px; display: block; object-fit: contain;
+      width: 34px; height: 34px; display: block; object-fit: cover;
     }
     .nav-btn.active .nav-icon-wrap {
-      box-shadow: 0 0 0 2.5px #0066cc, 0 2px 10px rgba(0,102,204,0.4);
+      box-shadow: 0 0 0 2px #1e6fff, 0 0 10px rgba(30,111,255,0.5);
+      opacity: 1;
     }
-    .nav-btn.active .nav-label { color: #0066cc; font-weight: 700; }
+    .nav-btn.active .nav-label { color: #1e6fff; font-weight: 700; }
 
     /* FAB */
     .nav-fab {
@@ -424,11 +425,11 @@
   <!-- Bottom Nav -->
   <nav class="nav">
     <button class="nav-btn active" id="nav-dashboard">
-      <div class="nav-icon-wrap"><img src="/assets/dashboard (1).png"></div>
+      <div class="nav-icon-wrap"><img src="/assets/dashboard (1).png" style="object-position:20% center;"></div>
       <span class="nav-label">Dashboard</span>
     </button>
     <button class="nav-btn" id="nav-jobs">
-      <div class="nav-icon-wrap"><img src="/assets/briefcase.png"></div>
+      <div class="nav-icon-wrap"><img src="/assets/briefcase.png" style="object-position:30% center;"></div>
       <span class="nav-label">Jobs</span>
     </button>
     <button class="nav-fab" id="nav-add">
@@ -438,11 +439,11 @@
       <span class="nav-fab-label">Add</span>
     </button>
     <button class="nav-btn" id="nav-calendar">
-      <div class="nav-icon-wrap"><img src="/assets/calendar_no_clock.png"></div>
+      <div class="nav-icon-wrap"><img src="/assets/calendar_no_clock.png" style="object-position:center center;"></div>
       <span class="nav-label">Calendar</span>
     </button>
     <button class="nav-btn" id="nav-sales">
-      <div class="nav-icon-wrap"><img src="/assets/growth_chart.png"></div>
+      <div class="nav-icon-wrap"><img src="/assets/growth_chart.png" style="object-position:right bottom;"></div>
       <span class="nav-label">Sales</span>
     </button>
   </nav>
