@@ -194,13 +194,13 @@ function weekPills(jobs) {
     return `
       <button data-week-day="${ds}" style="
         display:flex;flex-direction:column;align-items:center;gap:2px;
-        padding:7px 10px;border-radius:12px;border:none;cursor:pointer;flex-shrink:0;
+        padding:5px 8px;border-radius:10px;border:none;cursor:pointer;flex-shrink:0;
         background:${sel ? '#0066cc' : 'var(--g100)'};
         color:${sel ? '#fff' : isToday ? '#0066cc' : 'var(--g600)'};
-        font-family:inherit;transition:all .15s;min-width:44px;">
-        <span style="font-size:10px;font-weight:600;letter-spacing:.2px;">${DAY_LABELS[d.getDay()]}</span>
-        <span style="font-size:15px;font-weight:${isToday||sel?'800':'500'};">${d.getDate()}</span>
-        <span style="width:4px;height:4px;border-radius:50%;background:${sel?'rgba(255,255,255,.6)':hasJobs?'#0066cc':'transparent'};"></span>
+        font-family:inherit;transition:all .15s;min-width:36px;">
+        <span style="font-size:9px;font-weight:600;letter-spacing:.2px;">${DAY_LABELS[d.getDay()]}</span>
+        <span style="font-size:13px;font-weight:${isToday||sel?'800':'500'};">${d.getDate()}</span>
+        <span style="width:3px;height:3px;border-radius:50%;background:${sel?'rgba(255,255,255,.6)':hasJobs?'#0066cc':'transparent'};"></span>
       </button>`;
   }).join('');
 }
@@ -211,21 +211,21 @@ function weekJobPanel(jobs, dateStr) {
     .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
   if (dayJobs.length === 0) {
-    return `<div style="padding:20px 0 18px;text-align:center;color:var(--g400);font-size:14px;font-weight:500;">No jobs this day</div>`;
+    return `<div style="padding:16px 0 14px;text-align:center;color:var(--g400);font-size:13px;font-weight:500;">No jobs this day</div>`;
   }
   return dayJobs.map(j => `
-    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--g100);">
-      <div style="min-width:42px;text-align:center;">
-        <div style="font-size:12px;font-weight:700;color:#0066cc;">${j.time ? fmtTime(j.time) : '—'}</div>
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--g100);">
+      <div style="min-width:36px;text-align:center;">
+        <div style="font-size:11px;font-weight:700;color:#0066cc;">${j.time ? fmtTime(j.time) : '—'}</div>
       </div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:700;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(j.customer)}</div>
-        <div style="font-size:12px;color:var(--g500);margin-bottom:1px;">${esc(j.service||'')}</div>
-        <div style="font-size:12px;color:var(--g400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${esc(j.address)}</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(j.customer)}</div>
+        <div style="font-size:11px;color:var(--g500);margin-bottom:1px;">${esc(j.service||'')}</div>
+        <div style="font-size:11px;color:var(--g400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${esc(j.address)}</div>
       </div>
       <div style="text-align:right;flex-shrink:0;">
-        <div style="font-size:14px;font-weight:800;">${fmt$(j.price)}</div>
-        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:${j.status==='paid'?'#e8e8e8':j.status==='completed'?'#e0e8ff':'#f0f0f0'};color:#000;">${j.status}</span>
+        <div style="font-size:13px;font-weight:800;">${fmt$(j.price)}</div>
+        <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:100px;background:${j.status==='paid'?'#e8e8e8':j.status==='completed'?'#e0e8ff':'#f0f0f0'};color:#000;">${j.status}</span>
       </div>
     </div>`).join('');
 }
@@ -237,27 +237,36 @@ function showDashboard() {
   const today = localDate();
   const now   = new Date();
 
-  const wStart = new Date(now); wStart.setDate(now.getDate() - now.getDay());
+  // Week: Monday–Sunday
+  const wStart = new Date(now); wStart.setDate(now.getDate() - (now.getDay() + 6) % 7);
   const wEnd   = new Date(wStart); wEnd.setDate(wStart.getDate() + 6);
   const wS = localDate(wStart), wE = localDate(wEnd);
+
+  // Month: full calendar month bounds
   const mS = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
+  const mE = localDate(new Date(now.getFullYear(), now.getMonth()+1, 0));
 
   const isPaid  = j => j.status === 'paid';
   const sum     = arr => arr.reduce((s,j) => s+(j.price||0), 0);
   const inRange = (j,a,b) => j.date >= a && j.date <= b;
 
-  const monthJobs    = jobs.filter(j => j.date >= mS);
+  // Month: all jobs in current calendar month, any status
+  const monthJobs    = jobs.filter(j => j.date >= mS && j.date <= mE);
   const monthTotal   = sum(monthJobs);
   const monthPaid    = sum(monthJobs.filter(isPaid));
   const monthPending = monthTotal - monthPaid;
+
+  // Week: all jobs Mon–Sun, any status
   const weekTotal    = sum(jobs.filter(j => inRange(j, wS, wE)));
   const weekPaid     = sum(jobs.filter(j => isPaid(j) && inRange(j, wS, wE)));
+
   const allPaid      = sum(jobs.filter(isPaid));
   const todayJobs    = jobs.filter(j => j.date === today).sort((a,b) => (a.time||'').localeCompare(b.time||''));
   const todayTotal   = sum(todayJobs);
   const todayPaid    = sum(todayJobs.filter(isPaid));
   const nSched       = jobs.filter(j => j.status === 'scheduled').length;
-  const nComp        = jobs.filter(j => j.status === 'completed').length;
+  // "done" = completed + paid (both are finished jobs)
+  const nDone        = jobs.filter(j => j.status === 'completed' || j.status === 'paid').length;
 
   // Ticker
   const tickerOpts = {
@@ -296,7 +305,7 @@ function showDashboard() {
       <div class="stat-card">
         <div class="stat-lbl">Jobs</div>
         <div class="stat-val">${jobs.length}</div>
-        <div class="stat-sub">${nSched} scheduled · ${nComp} done</div>
+        <div class="stat-sub">${nSched} scheduled · ${nDone} done</div>
       </div>
     </div>
 
@@ -304,8 +313,8 @@ function showDashboard() {
       <span class="sec-title">This Week</span>
       <button class="sec-link" data-go="calendar">Calendar →</button>
     </div>
-    <div class="card" style="padding:14px 14px 0;">
-      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:14px;">
+    <div class="card" style="padding:11px 11px 0;">
+      <div style="display:flex;justify-content:center;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:11px;">
         ${weekPills(jobs)}
       </div>
       <div id="week-jobs">
