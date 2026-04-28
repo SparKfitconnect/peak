@@ -146,6 +146,7 @@ let selectedCalDay = localDate();
 let activeCharts   = [];
 let dashMonthIdx   = 0;
 let tickerMode     = 'month';
+let weekDaySel     = localDate(); // currently selected day in the weekly widget
 
 // ── App shell ─────────────────────────────────────────────────────────────────
 
@@ -155,6 +156,7 @@ function render(html) { app.innerHTML = `<div class="fade-in">${html}</div>`; }
 // ── Navigation ────────────────────────────────────────────────────────────────
 
 function go(v) {
+  if (v === 'dashboard') weekDaySel = localDate();
   view = v;
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById(`nav-${v}`);
@@ -171,6 +173,61 @@ function paint() {
     case 'calendar':  showCalendar();  break;
     case 'sales':     showSales();     break;
   }
+}
+
+// ── Weekly schedule widget helpers ───────────────────────────────────────────
+
+function weekPills(jobs) {
+  const today = localDate();
+  const now   = new Date();
+  const DAY_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  // Build the 7 days of the current week (Sun–Sat)
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  return Array.from({ length: 7 }, (_, i) => {
+    const d    = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const ds   = localDate(d);
+    const sel  = ds === weekDaySel;
+    const isToday = ds === today;
+    const hasJobs = jobs.some(j => j.date === ds);
+    return `
+      <button data-week-day="${ds}" style="
+        display:flex;flex-direction:column;align-items:center;gap:2px;
+        padding:7px 10px;border-radius:12px;border:none;cursor:pointer;flex-shrink:0;
+        background:${sel ? '#0066cc' : 'var(--g100)'};
+        color:${sel ? '#fff' : isToday ? '#0066cc' : 'var(--g600)'};
+        font-family:inherit;transition:all .15s;min-width:44px;">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.2px;">${DAY_LABELS[d.getDay()]}</span>
+        <span style="font-size:15px;font-weight:${isToday||sel?'800':'500'};">${d.getDate()}</span>
+        <span style="width:4px;height:4px;border-radius:50%;background:${sel?'rgba(255,255,255,.6)':hasJobs?'#0066cc':'transparent'};"></span>
+      </button>`;
+  }).join('');
+}
+
+function weekJobPanel(jobs, dateStr) {
+  const dayJobs = jobs
+    .filter(j => j.date === dateStr)
+    .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+  if (dayJobs.length === 0) {
+    return `<div style="padding:20px 0 18px;text-align:center;color:var(--g400);font-size:14px;font-weight:500;">No jobs this day</div>`;
+  }
+  return dayJobs.map(j => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-top:1px solid var(--g100);">
+      <div style="min-width:42px;text-align:center;">
+        <div style="font-size:12px;font-weight:700;color:#0066cc;">${j.time ? fmtTime(j.time) : '—'}</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(j.customer)}</div>
+        <div style="font-size:12px;color:var(--g500);margin-bottom:1px;">${esc(j.service||'')}</div>
+        <div style="font-size:12px;color:var(--g400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${esc(j.address)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:14px;font-weight:800;">${fmt$(j.price)}</div>
+        <span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:${j.status==='paid'?'#e8e8e8':j.status==='completed'?'#e0e8ff':'#f0f0f0'};color:#000;">${j.status}</span>
+      </div>
+    </div>`).join('');
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -216,23 +273,18 @@ function showDashboard() {
   const goalLeft    = Math.max(0, GOAL - allPaid);
 
   render(`
-    <div class="ticker" id="dash-ticker">
-      <button class="ticker-btn" id="ticker-toggle">
-        <span class="ticker-lbl">${tk.lbl}</span>
-        <span class="ticker-amt">${fmt$(tk.val)}</span>
-        <span class="ticker-chev">▾</span>
+    <div class="hero" id="dash-hero" style="background:linear-gradient(135deg,#1a1a2e 0%,#0055cc 100%);position:relative;">
+      <button class="hero-toggle" id="ticker-toggle">
+        <span class="hero-lbl" style="margin-bottom:0;">${tk.lbl}</span>
+        <span class="hero-chev" id="ticker-chev">▾</span>
       </button>
-      <div class="ticker-menu" id="ticker-menu" style="display:none;">
-        <button class="ticker-opt${tickerMode==='month'?' active':''}" data-tmode="month">Month Revenue</button>
-        <button class="ticker-opt${tickerMode==='week'?' active':''}" data-tmode="week">Week Revenue</button>
-        <button class="ticker-opt${tickerMode==='all'?' active':''}" data-tmode="all">All Revenue</button>
+      <div class="hero-val">${fmt$(tk.val)}</div>
+      <div class="hero-sub">${tk.sub}</div>
+      <div class="hero-drop" id="ticker-menu" style="display:none;">
+        <button class="hero-opt${tickerMode==='month'?' active':''}" data-tmode="month">Month Revenue</button>
+        <button class="hero-opt${tickerMode==='week'?' active':''}" data-tmode="week">Week Revenue</button>
+        <button class="hero-opt${tickerMode==='all'?' active':''}" data-tmode="all">All Revenue</button>
       </div>
-    </div>
-
-    <div class="hero" style="background:linear-gradient(135deg,#1a1a2e 0%,#0055cc 100%);">
-      <div class="hero-lbl">Month Total</div>
-      <div class="hero-val">${fmt$(monthTotal)}</div>
-      <div class="hero-sub">${fmt$(monthPaid)} paid · ${fmt$(monthPending)} pending</div>
     </div>
 
     <div class="stat-grid">
@@ -249,14 +301,17 @@ function showDashboard() {
     </div>
 
     <div class="sec-hd">
-      <span class="sec-title">Today's Schedule</span>
+      <span class="sec-title">This Week</span>
       <button class="sec-link" data-go="calendar">Calendar →</button>
     </div>
-
-    ${todayJobs.length === 0
-      ? `<div class="card"><div class="empty" style="padding:28px 0;"><img src="/assets/mountain.png" style="width:140px;display:block;margin:0 auto 10px;mix-blend-mode:darken;"><div class="empty-text">No jobs today</div></div></div>`
-      : todayJobs.map(j => jobCard(j)).join('')
-    }
+    <div class="card" style="padding:14px 14px 0;">
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:14px;">
+        ${weekPills(jobs)}
+      </div>
+      <div id="week-jobs">
+        ${weekJobPanel(jobs, weekDaySel)}
+      </div>
+    </div>
 
     <div class="sec-hd" style="margin-top:4px;">
       <span class="sec-title">Monthly Revenue</span>
@@ -296,20 +351,39 @@ function showDashboard() {
 
   bindSwipe();
 
-  // Ticker dropdown
+  // Weekly widget — instant day switching
+  document.querySelectorAll('[data-week-day]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      weekDaySel = btn.dataset.weekDay;
+      // Swap pill styles instantly
+      document.querySelectorAll('[data-week-day]').forEach(b => {
+        const sel   = b.dataset.weekDay === weekDaySel;
+        const isToday = b.dataset.weekDay === localDate();
+        b.style.background = sel ? '#0066cc' : 'var(--g100)';
+        b.style.color      = sel ? '#fff' : isToday ? '#0066cc' : 'var(--g600)';
+        const dot = b.querySelector('span:last-child');
+        if (dot) dot.style.background = sel ? 'rgba(255,255,255,.6)' : (load().some(j => j.date === b.dataset.weekDay) ? '#0066cc' : 'transparent');
+      });
+      // Swap job list instantly
+      const panel = document.getElementById('week-jobs');
+      if (panel) panel.innerHTML = weekJobPanel(load(), weekDaySel);
+    });
+  });
+
+  // Hero ticker dropdown
   const tickerToggle = document.getElementById('ticker-toggle');
   const tickerMenu   = document.getElementById('ticker-menu');
-  const dashTicker   = document.getElementById('dash-ticker');
+  const tickerChev   = document.getElementById('ticker-chev');
   if (tickerToggle) {
     tickerToggle.addEventListener('click', e => {
       e.stopPropagation();
       const open = tickerMenu.style.display !== 'none';
       tickerMenu.style.display = open ? 'none' : 'block';
-      dashTicker.classList.toggle('open', !open);
+      tickerChev.classList.toggle('open', !open);
       if (!open) {
         setTimeout(() => document.addEventListener('click', () => {
           tickerMenu.style.display = 'none';
-          dashTicker.classList.remove('open');
+          tickerChev.classList.remove('open');
         }, { once: true }), 0);
       }
     });
