@@ -6,9 +6,12 @@ const { WebSocketServer, OPEN } = require('ws');
 const fs      = require('fs');
 const path    = require('path');
 
-const DATA   = path.join(__dirname, 'data.json');
-const BACKUP = path.join(__dirname, 'data.backup.json');
-const PORT   = parseInt(process.env.PORT) || 3000;
+// DATA_PATH: set this env var on Render to point to a persistent disk directory.
+// Without it, data lives in the repo folder and gets wiped on each redeploy.
+const DATA_DIR = process.env.DATA_PATH || __dirname;
+const DATA     = path.join(DATA_DIR, 'data.json');
+const BACKUP   = path.join(__dirname, 'data.backup.json'); // always in repo as fallback
+const PORT     = parseInt(process.env.PORT) || 3000;
 
 const app    = express();
 const server = http.createServer(app);
